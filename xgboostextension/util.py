@@ -1,5 +1,7 @@
 import numpy as np
 from scipy import sparse
+from sklearn.base import BaseEstimator
+from sklearn.utils.metaestimators import if_delegate_has_method
 
 
 def _preprare_data_in_groups(X, y=None, sample_weights=None):
@@ -43,3 +45,95 @@ def _preprare_data_in_groups(X, y=None, sample_weights=None):
         sample_weights = sample_weights[group_indices]
 
     return sizes, X, y, sample_weights
+
+
+class RankingEstimator(BaseEstimator):
+    """
+    Transforms a simple sklearn estimator into an estimator
+    that takes groups as an input. This method modifies the
+    fit, predict, etc. methods of the provided estimator to
+    take the group labels as an input in the first column.
+
+    Parameters
+    ----------
+    estimator : (sklearn-estimator) The standard sklearn estimator
+        that should be applied to a ranking problems.
+    """
+    def __init__(self, estimator):
+        self.estimator = estimator
+
+    @if_delegate_has_method(delegate=('estimator'))
+    def fit(self, X, y):
+        _, X, y, _ = _preprare_data_in_groups(X, y)
+
+        return self.estimator.fit(X, y)
+
+    @if_delegate_has_method(delegate=('estimator'))
+    def predict(self, X):
+        """Call predict on the underlying estimator.
+
+        Parameters
+        -----------
+        X : (ndarray, n_samples x (1 + n_features)), feature matrix with
+            the first column containing the group label
+        """
+
+        # Remove groups column from the data
+        _, X, _, _ = _preprare_data_in_groups(X)
+
+        return self.estimator.predict(X)
+
+    @if_delegate_has_method(delegate=('estimator'))
+    def predict_proba(self, X):
+        """Call predict_proba on the underlying estimator.
+
+        Parameters
+        -----------
+        X : (ndarray, n_samples x (1 + n_features)), feature matrix with
+            the first column containing the group label
+        """
+
+        # Remove groups column from the data
+        _, X, _, _ = _preprare_data_in_groups(X)
+
+        return self.estimator.predict_proba(X)
+
+    @if_delegate_has_method(delegate=('estimator'))
+    def predict_log_proba(self, X):
+        """Call predict_log_proba on the underlying estimator.
+
+        Parameters
+        -----------
+        X : (ndarray, n_samples x (1 + n_features)), feature matrix with
+            the first column containing the group label
+        """
+
+        # Remove groups column from the data
+        _, X, _, _ = _preprare_data_in_groups(X)
+
+        return self.estimator.predict_log_proba(X)
+
+    @if_delegate_has_method(delegate=('estimator'))
+    def decision_function(self, X):
+        """Call descision_function on the underlying estimator.
+
+        Parameters
+        -----------
+        X : (ndarray, n_samples x (1 + n_features)), feature matrix with
+            the first column containing the group label
+        """
+
+        # Remove groups column from the data
+        _, X, _, _ = _preprare_data_in_groups(X)
+
+        return self.estimator.decision_function(X)
+
+    # get_params is not overriden since this causes
+    # cloning of the estimator to fail.
+
+    def set_params(self, **params):
+        # Do override set_params since this enables
+        # arguments to the wrapped class to be passed
+        # without __
+        self.estimator.set_params(**params)
+        return self

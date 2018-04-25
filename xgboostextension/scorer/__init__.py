@@ -13,6 +13,10 @@ class _RankingScorer(_BaseScorer):
 
         Parameters
         ----------
+        score_func : (callable) The metric that should be used for scoring
+            per query
+
+        sign : (int, 1 or -1) Indicates whether a larger value is better
         """
         if not score_func.__module__ == 'xgboostextension.scorer.metrics':
             raise ValueError(
@@ -26,12 +30,6 @@ class _RankingScorer(_BaseScorer):
         )
 
     def __call__(self, estimator, X, y, sample_weight=None):
-        if not isinstance(estimator, XGBRanker):
-            raise NotImplementedError((
-                'Currently only scoring for the'
-                'XGBRanker model is supported.'
-            ))
-
         sizes, _, y_sorted, _ = _preprare_data_in_groups(X, y)
 
         y_predicted = estimator.predict(X)
