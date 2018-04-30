@@ -10,9 +10,7 @@ setup(
     license='Apache 2.0',
     description='XGBoost Extension for Easy Ranking & TreeFeature.',
     install_requires=[
-        'xgboost>=0.7',
-        'scikit-learn>=0.19.0',
-        'numpy>=1.14.0'
+        'xgboost>=0.7'
     ],
     setup_requires=[]
 )
