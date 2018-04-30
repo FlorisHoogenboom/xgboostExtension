@@ -30,8 +30,8 @@ class _RankingScorer(_BaseScorer):
         )
 
     def __call__(self, estimator, X, y, sample_weight=None):
-        sizes, _, y_sorted, _ = _preprare_data_in_groups(X, y)
+        sizes, X_sorted, _, y_sorted, _ = _preprare_data_in_groups(X, y)
 
-        y_predicted = estimator.predict(X)
+        y_predicted = estimator.predict(X_sorted)
 
         return self._sign * self._score_func(sizes, y_sorted, y_predicted)

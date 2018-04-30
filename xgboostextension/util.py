@@ -36,7 +36,8 @@ def _preprare_data_in_groups(X, y=None, sample_weights=None):
 
     group_labels = group_labels[group_indices]
     _, sizes = np.unique(group_labels, return_counts=True)
-    X = X[group_indices, 1:]
+    X_sorted = X[group_indices]
+    X_features = X_sorted[:, 1:]
 
     if y is not None:
         y = y[group_indices]
@@ -44,29 +45,29 @@ def _preprare_data_in_groups(X, y=None, sample_weights=None):
     if sample_weights is not None:
         sample_weights = sample_weights[group_indices]
 
-    return sizes, X, y, sample_weights
+    return sizes, X_sorted, X_features, y, sample_weights
 
 
 class RankingEstimator(BaseEstimator):
-    """
-    Transforms a simple sklearn estimator into an estimator
-    that takes groups as an input. This method modifies the
-    fit, predict, etc. methods of the provided estimator to
-    take the group labels as an input in the first column.
-
-    Parameters
-    ----------
-    estimator : (sklearn-estimator) The standard sklearn estimator
-        that should be applied to a ranking problems.
-    """
     def __init__(self, estimator):
+        """
+        Transforms a simple sklearn estimator into an estimator
+        that takes groups as an input. This method modifies the
+        fit, predict, etc. methods of the provided estimator to
+        take the group labels as an input in the first column.
+
+        Parameters
+        ----------
+        estimator : (sklearn-estimator) The standard sklearn estimator
+            that should be applied to a ranking problems.
+        """
         self.estimator = estimator
 
     @if_delegate_has_method(delegate=('estimator'))
     def fit(self, X, y):
-        _, X, y, _ = _preprare_data_in_groups(X, y)
+        _, _, X_features, y, _ = _preprare_data_in_groups(X, y)
 
-        return self.estimator.fit(X, y)
+        return self.estimator.fit(X_features, y)
 
     @if_delegate_has_method(delegate=('estimator'))
     def predict(self, X):
@@ -79,9 +80,9 @@ class RankingEstimator(BaseEstimator):
         """
 
         # Remove groups column from the data
-        _, X, _, _ = _preprare_data_in_groups(X)
+        _, _, X_features, _, _ = _preprare_data_in_groups(X)
 
-        return self.estimator.predict(X)
+        return self.estimator.predict(X_features)
 
     @if_delegate_has_method(delegate=('estimator'))
     def predict_proba(self, X):
@@ -94,9 +95,9 @@ class RankingEstimator(BaseEstimator):
         """
 
         # Remove groups column from the data
-        _, X, _, _ = _preprare_data_in_groups(X)
+        _, _, X_features, _, _ = _preprare_data_in_groups(X)
 
-        return self.estimator.predict_proba(X)
+        return self.estimator.predict_proba(X_features)
 
     @if_delegate_has_method(delegate=('estimator'))
     def predict_log_proba(self, X):
@@ -109,9 +110,9 @@ class RankingEstimator(BaseEstimator):
         """
 
         # Remove groups column from the data
-        _, X, _, _ = _preprare_data_in_groups(X)
+        _, _, X_features, _, _ = _preprare_data_in_groups(X)
 
-        return self.estimator.predict_log_proba(X)
+        return self.estimator.predict_log_proba(X_features)
 
     @if_delegate_has_method(delegate=('estimator'))
     def decision_function(self, X):
@@ -124,9 +125,9 @@ class RankingEstimator(BaseEstimator):
         """
 
         # Remove groups column from the data
-        _, X, _, _ = _preprare_data_in_groups(X)
+        _, _, X_features, _, _ = _preprare_data_in_groups(X)
 
-        return self.estimator.decision_function(X)
+        return self.estimator.decision_function(X_features)
 
     # get_params is not overriden since this causes
     # cloning of the estimator to fail.
